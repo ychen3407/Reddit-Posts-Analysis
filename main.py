@@ -18,7 +18,7 @@ class Subreddit_Scraper():
         curr_height = self.driver.execute_script("return document.body.scrollHeight")
         html_source = None
         n = 0
-        # retries = 0
+        retries = 0
 
         while True:
             self.driver.execute_script("window.scrollBy(0, document.body.scrollHeight);")
@@ -26,10 +26,16 @@ class Subreddit_Scraper():
 
             new_height = self.driver.execute_script("return document.body.scrollHeight")
 
-            if new_height == curr_height or n == max_scroll:
+
+            if (new_height == curr_height and retries >= 3) or n == max_scroll:
                 # print("Reached the end!/reached max scroll")
                 html_source = self.driver.page_source
+                print('retries:', retries)
                 break
+
+            if new_height == curr_height:
+                retries += 1
+
             curr_height = new_height
             n += 1
         return html_source
@@ -61,7 +67,7 @@ class Subreddit_Scraper():
         return self.driver.page_source
     
     def get_post_details(self, post_html):
-        attrs = ['id', 'author', 'discussion_type', 'num_comments', 'ups', 'upvote_ratio', 'created_utc', 'is_video', 'selftext']
+        attrs = ['id', 'author', 'title', 'discussion_type', 'num_comments', 'ups', 'upvote_ratio', 'created_utc', 'is_video', 'selftext']
         parser=BeautifulSoup(post_html, 'html.parser')
         try:
             post = json.loads(parser.find('body').get_text())
