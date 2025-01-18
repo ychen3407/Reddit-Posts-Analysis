@@ -8,17 +8,16 @@ import time, json, random
 class Subreddit_Scraper():
     def __init__(self, link):
         # assumed in the same path, has to be compatiable with the chrome version
-        service = Service(executable_path="chromedriver.exe")
+        service = Service(executable_path="C:/Users/Febru/Desktop/de_project/Reddit-Posts-Analysis\chromedriver.exe")
         self.driver = webdriver.Chrome(service=service)
         self.link = link
-        self.post_ids = None
+        self.post_ids = set()
         self.post_details = []
 
     def scroll(self, max_scroll=10):
         curr_height = self.driver.execute_script("return document.body.scrollHeight")
         html_source = None
         n = 0
-        retries = 0
 
         while True:
             self.driver.execute_script("window.scrollBy(0, document.body.scrollHeight);")
@@ -26,38 +25,34 @@ class Subreddit_Scraper():
 
             new_height = self.driver.execute_script("return document.body.scrollHeight")
 
-
-            if (new_height == curr_height and retries >= 3) or n == max_scroll:
+            if new_height == curr_height or n == max_scroll:
                 # print("Reached the end!/reached max scroll")
                 html_source = self.driver.page_source
-                print('retries:', retries)
                 break
-
-            if new_height == curr_height:
-                retries += 1
 
             curr_height = new_height
             n += 1
         return html_source
-    
-    def get_post_links(self, max_scroll=10):
-        "max_scroll: max num of scrolling down (if page exceed 10 scrolls)"
+
+    def get_post_links(self, max_scroll=1, n_scroll=1):
+        """
+        Args:
+            max_scroll: max num of scrolling down every time we call scroll()
+            n_scroll: num of times to call scroll()
+        """
         self.driver.get(self.link)
         self.driver.maximize_window()
 
-        time.sleep(10)
-
-        html_source = self.scroll(max_scroll)
-
-        # test:
-        # with open('page_source.html', 'w', encoding='utf-8') as f:
-        #     f.write(html_source)
-
-        parser=BeautifulSoup(html_source, 'html.parser')
-        post_links = parser.find_all('a', {'slot': 'full-post-link'})
-
-        self.post_ids = [link['href'].split('/')[4] for link in post_links]
-        print(f'Successfully parsed {len(self.post_ids)} post_ids')
+        time.sleep(6)
+        for i in range(n_scroll):
+            html_source = self.scroll(max_scroll)
+            parser = BeautifulSoup(html_source, 'html.parser')
+            post_links = parser.find_all('a', {'slot': 'full-post-link'})
+            cnt = 0
+            for link in post_links:
+                self.post_ids.add(link['href'].split('/')[4])
+                cnt += 1
+            print(f'Successfully parsed {cnt} post_ids')
 
     def get_post_html(self, post_id):
         base_url='https://www.reddit.com/'
@@ -106,16 +101,10 @@ class Subreddit_Scraper():
 
 if __name__ == "__main__":
     start_time = time.time()
-    link='https://www.reddit.com/r/TikTok/top/?t=week'
+    link='https://www.reddit.com/r/TikTok/top/?t=month'
     scraper_obj = Subreddit_Scraper(link)
-
-    # scraper_obj.driver.get(scraper_obj.link)
-    # scraper_obj.scroll(max_scroll=5)
-
-
-    scraper_obj.get_post_links(max_scroll=30)
+    scraper_obj.get_post_links(max_scroll=1, n_scroll=30)
     scraper_obj.get_all_posts()
     scraper_obj.save()
-
     end_time = time.time()
     print(f'Time Taken: {end_time - start_time}')
