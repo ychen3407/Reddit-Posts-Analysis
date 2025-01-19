@@ -48,20 +48,20 @@ def clean(path, extractor):
     df = pd.DataFrame(json.loads(data))
 
     # convert unix-timestamp and to local time 
-    df['timestamp'] = pd.to_datetime(df['create_utc'], unit='s', utc=True).dt.tz_convert('America/New_York')
+    df['timestamp'] = pd.to_datetime(df['created_utc'], unit='s', utc=True).dt.tz_convert('America/New_York')
     df['text_polarity']=df['selftext'].apply(get_polarity)
     df['sentiment'] = df['text_polarity'].apply(get_sentiment) 
     df['text_kw'] = df['selftext'].apply(lambda x: extract_top_kw(extractor=extractor, n=3, text=x))
     df['title_kw'] = df['title'].apply(lambda x: extract_top_kw(extractor=extractor, n=1, text=x))
 
-    cols = ['datetime', 'id', 'author', 'title', 'num_comments', 'ups', 'upvote_ratio', 
+    cols = ['timestamp', 'id', 'author', 'title', 'num_comments', 'ups', 'upvote_ratio', 
         'is_video', 'selftext', 'text_polarity', 'sentiment', 'text_kw', 'title_kw']
     clean_df = df[cols]
     return clean_df
 
 
 if __name__ == '__main__':
-    kw_extractor = get_kw_extractor
+    kw_extractor = get_kw_extractor()
     path = 'subreddit_2025-01-17.json'
     
     df = clean(path, extractor=kw_extractor)
