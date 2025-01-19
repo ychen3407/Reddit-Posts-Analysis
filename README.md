@@ -10,7 +10,7 @@ This analysis aims to understand and visualize the current trends and people's t
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://glowing-space-xylophone-x4vj796xwqrf65gp-8501.app.github.dev/)
 
 What my streamlit app looks like:
-<img src='images/streamlit_example.png', height="500">
+<img src='images/streamlit_example.png' height="500">
 
 
 I included a sample data (subreddit_2025-01-17.json) I've scraped using main.py
